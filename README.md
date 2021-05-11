@@ -1,2 +1,2 @@
 # algorithm_training
-Repo for all my leetcode exercises
+Repo for practicing my algorithms 
