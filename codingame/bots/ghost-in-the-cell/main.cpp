@@ -24,7 +24,7 @@ private:
 		int distance;
 
 		Node(Factory *_dest, int w) : destiny(_dest), distance(w) {}
-		~Node() { delete destiny; }
+		~Node() {}
 
 	};
 
@@ -47,35 +47,62 @@ public:
 		this->production = p;
 	}
 
+    void printId() {
+        cerr << id << "\n";
+    }
+
 	void addAdjacent(Factory* f, int w) {
 		Node n(f, w);
-		adj.push_back(n);	
+        
+		adj.push_back(n);
 	}
+
+    bool isEnemy() {
+        return this->team == Team::Enemy;
+    }
 
 	bool isFriend() {
 		return this->team == Team::Friend;
 	}
 
-	string chooseTarget() {
+    // nao faz nada 
+	void moveWorkers(int w, Factory& f) {
+		if ( workers - w < 0) {
+			workers = 0;
+			f.workers += workers;
+		}
+		
+		else {
+			workers -= w;
+			f.workers += w;
+		}
+	}
+
+	string chooseAction(int &bombCount) {
 		stringstream ss;
 
-		int min_dist = INT32_MAX;
-		int dest_id = 0;
-
-		//cerr << "Cheguei aqui " << this->id << endl; 
+        if ( workers > 10 && production < 3 ) {
+            ss << "INC " << this->id << ";";
+        }
 
 		for ( Node &n : adj) {
-			if ( n.destiny->production != 0 && !n.destiny->isFriend() ) {
-				if ( min_dist < n.distance ) {
-					min_dist = n.distance;
-					dest_id = n.destiny->id;
-				}
-			}
-		}
 
-		if ( min_dist != INT32_MAX ) {
-			ss << "MOVE " << this->id << " " << dest_id << " " << this->workers << " ";
-			ss << "; MSG Attack factory " << dest_id << " ";
+			if ( n.destiny->production > 0 && !n.destiny->isFriend() ) {
+                if  ( n.destiny->isEnemy() && n.destiny->production == 3 && bombCount > 0 ) {
+                    ss << "BOMB " << this->id << " " << n.destiny->id << ";";
+                    bombCount--;
+                    continue;
+                }
+
+                if ( this->workers >= n.destiny->workers+1 ) {
+                    ss << "MOVE " << this->id << " " << n.destiny->id << " " <<  n.destiny->workers+1 << ";";
+
+                    this->workers -=  n.destiny->workers+1;
+                }
+                
+			}
+
+            if ( workers == 0 ) break;
 		}
 
 		return ss.str();
@@ -88,33 +115,33 @@ public:
 
 class Map {
 private:
-	int V;
-	map<int, Factory*> factories;
+	int nFactories;
+    int bombCount = 2;
+	vector<Factory*> factories;
 
 public:
-	Map(int v) {
-		this->V = v;
+	Map(int numberFactories) {
+		this->nFactories = numberFactories;
 
-		for (int id = 0; id < v; id++) {
+        factories = vector<Factory*>(numberFactories);
+
+		for (int id = 0; id < numberFactories; id++) {
 			Factory* f = new Factory(id); 
 			addFactory(f, id);
-		}
+		} 
+
+        
 	}
 
 	~Map() {}
-
-	bool existsFactory(int id) {
-		return (factories.find(id) != factories.end());
-	}
 
 	void addAdjacency(int id1, int id2, int weigth) {
 		Factory* f1 = factories[id1];
 		Factory* f2 = factories[id2]; 
 
-		f1->addAdjacent(f2, weigth);
-		cerr << "f1" << endl;
+        f1->addAdjacent(f2, weigth);
 		f2->addAdjacent(f1, weigth);
-		cerr << "f2" << endl;
+       
 	}
 
 	void addFactory(Factory* factory, int id) {
@@ -128,21 +155,19 @@ public:
 	string attack() {
 		string s = "";
 
-		for (auto &p : factories) {
-			Factory* f = p.second;
+		for (Factory* f : factories) {
 
-			if ( f->isFriend() ) {
-				string tmp = f->chooseTarget(); 
+            if ( f->isFriend() ) {
+				string tmp = f->chooseAction(bombCount); 
 
 				if ( tmp != "") {
-					s += tmp;
-					s += "; ";	
+					s += tmp;	
 				}
 				 
 			}
 		}
 
-		s += "WAIT "; 
+		s += "WAIT"; 
 
 		return s;
 	}
@@ -154,14 +179,16 @@ public:
 
 int main()
 {
-    
     int factoryCount; // the number of factories
     cin >> factoryCount; cin.ignore();
 
     Map map(factoryCount);
 
+    //cout << "MSG OI???" << "\n";
+
     int linkCount; // the number of links between factories
     cin >> linkCount; cin.ignore();
+    
     
     for (int i = 0; i < linkCount; i++) {
         int factory1;
@@ -172,10 +199,9 @@ int main()
 
         map.addAdjacency(factory1, factory2, distance);
 
-        cerr << i << endl;
     }
 
-
+    
     // game loop
     while (1) {
         int entityCount; // the number of entities (e.g. factories and troops)
@@ -188,13 +214,12 @@ int main()
             int arg1; // team
             int arg2; // workers
             int arg3; // production
-            int arg4;
+            int arg4; // turns before it starts producing again 
             int arg5;
             cin >> entityId >> entityType >> arg1 >> arg2 >> arg3 >> arg4 >> arg5; cin.ignore();
 
             if (entityType == "FACTORY") {
             	Factory* f = map.factoryById(entityId);
-
         		
             	f->updateAttributes(arg1, arg2, arg3);
             }
@@ -202,9 +227,11 @@ int main()
         }
 
         //Moving the robots
+        
         string s = map.attack();
 
         cout << s << endl;
+       
 
     }
 }
