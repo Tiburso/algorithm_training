@@ -6,18 +6,18 @@ using namespace std;
 struct ListNode {
     int val;
     ListNode *next;
-    ListNode() : val(0), next(nullptr) {}
-    ListNode(int x) : val(x), next(nullptr) {}
+    ListNode() : val(0), next(NULL) {}
+    ListNode(int x) : val(x), next(NULL) {}
 	ListNode(int x, ListNode *next) : val(x), next(next) {}
 };
 
 ListNode* reverseList(ListNode* head) {
-	ListNode* prev = nullptr;
+	ListNode* prev = NULL;
 	ListNode* curr = head;
 
-	while ( curr != nullptr ) {
+	while ( curr != NULL ) {
 		ListNode* aux = curr->next;
-		curr->next = prev;
+		curr->next = prev;                            
 		prev = curr;
 		curr = aux;
 	}
@@ -25,19 +25,37 @@ ListNode* reverseList(ListNode* head) {
 	return prev;
 }
 
+void printList(ListNode* head) {
+	for (ListNode* p = head; p ; p = p->next) {
+		cout << p->val << " ";
+	}
+
+	cout << endl;
+}
+
+ListNode* addValue(ListNode* head, int val) {
+	ListNode* n = new ListNode(val);
+
+	head->next = n;
+
+	return n;
+}
+
 int main() {
 	ios::sync_with_stdio(false);
 	cin.tie(0);
 	
-	ListNode e(5);
-	ListNode d(4,&e);
-	ListNode c(3, &d);
-	ListNode b(2, &c);
-	ListNode head(1, &b);
+	ListNode* e = new ListNode(5);
+	ListNode* d = new ListNode(4,e);
+	ListNode* c = new ListNode(3, d);
+	ListNode* b = new ListNode(2, c);
+	ListNode* head = new ListNode(1, b);
 
-	ListNode* final = reverseList(nullptr);
+	printList(head);
+
+	ListNode* final = reverseList(head);
 	
-	if (final) cout << final->val << endl;
+	printList(final);
 
 	return 0;
 }

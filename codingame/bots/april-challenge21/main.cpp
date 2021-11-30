@@ -3,10 +3,10 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <list>
+#include <memory>
 
 using namespace std;
-
-
 
 class Tree {
 private:	
@@ -28,14 +28,90 @@ ostream& operator<<(ostream& os, const Tree& t) {
 }
 
 
+/* Grid class */
+class Grid {
+private:
+	vector<int> adj;
+	Tree* tree;
+	bool isShadow;
+public:
+	Grid( vector<int> a, Tree* t = NULL, bool shadow = false) : adj(a), tree(t), isShadow(shadow) {}
+	~Grid() {
+		delete tree;
+	}
+
+	void castShadow() { isShadow = true; }
+};
+
+
+/* Map class */
+class Map {
+private:
+	int day;
+	int sun; 
+	int nutrient;
+
+	map<int, Grid> grid;
+	vector<vector<Tree>> myTrees;
+
+public:
+	Map(int d = 0, int s = 1, int n = 20) : day(d), sun(s), nutrient(n) {}
+	~Map() {}
+
+	void updateTrees() {
+
+	}
+
+	void newDay(int newDay, int newSun, int newNutrients) {
+		day = newDay;
+		sun = newSun;
+		nutrient = newNutrients;
+
+		//return new_d;
+	}
+
+	void clearTrees() {
+
+		for (auto &size : trees) {
+			size.clear();
+		}
+	}
+
+	void growTrees() {
+
+		 // GROW cellIdx | SEED sourceIdx targetIdx | COMPLETE cellIdx | WAIT <message>        
+        if ( (7+trees[3].size() <= sun) && !trees[2].empty() ) {
+        	cout << "GROW " << trees[2][0] << endl;
+        }
+        
+        else if ( !trees[3].empty() ) {
+        	cout << "COMPLETE " << trees[3][0] << endl;
+        }
+
+        else if ( (3+trees[2].size() <= sun) && !trees[1].empty() ) {
+        	cout << "GROW " << trees[1][0] << endl;
+        }
+
+        else cout << "WAIT" << endl;  
+
+	}
+
+	void castShadows(int dir) {
+		for (auto &p : grid) {
+			p.second.castShadow();
+		}
+	}
+
+};
+
+
 /* Main function */
 
 int main() {
     int numberOfCells; // 37
     cin >> numberOfCells; cin.ignore();
 
-
-
+    Map map;
     for (int i = 0; i < numberOfCells; i++) {
         int index; // 0 is the center cell, the next cells spiral outwards
         int richness; // 0 if the cell is unusable, 1-3 for usable cells
@@ -61,6 +137,8 @@ int main() {
         int score; // your current score
         cin >> sun >> score; cin.ignore();
 
+        map.newDay(day, sun, nutrients);
+
         int oppSun; // opponent's sun points
         int oppScore; // opponent's score
         bool oppIsWaiting; // whether your opponent is asleep until the next day
@@ -70,7 +148,8 @@ int main() {
         cin >> numberOfTrees; cin.ignore();
 
 
-        std::map<int, vector<int>> trees;
+        map.clearTrees();
+
         for (int i = 0; i < numberOfTrees; i++) {
             int cellIndex; // location of this tree
             int size; // size of this tree: 0-3
@@ -84,6 +163,7 @@ int main() {
             
         }
 
+        // Can ignore just for input
         int numberOfPossibleMoves;
         cin >> numberOfPossibleMoves; cin.ignore();
         for (int i = 0; i < numberOfPossibleMoves; i++) {
@@ -91,25 +171,8 @@ int main() {
             getline(cin, possibleMove);
         }
 
-        // GROW cellIdx | SEED sourceIdx targetIdx | COMPLETE cellIdx | WAIT <message>        
-        cerr << 7+trees[3].size() << " " << sun << endl;
-        
-        if ( (7+trees[3].size() <= sun) && !trees[2].empty() ) {
-        	cout << "GROW " << trees[2].front() << endl;
-        }
-        
-        else if ( !trees[3].empty() ) {
-        	cout << "COMPLETE " << trees[3].front() << endl;
-        }
-        
-        else if ( (3+trees[2].size() <= sun) && !trees[1].empty() ) {
-        	cout << "GROW " << trees[1].front() << endl;
-        }
 
-        
-        
 
-        else cout << "WAIT" << endl;  
         
     }
 }
